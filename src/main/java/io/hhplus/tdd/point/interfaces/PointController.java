@@ -20,7 +20,7 @@ public class PointController {
     private final PointService pointService;
 
     /**
-     * TODO - 특정 유저의 포인트를 조회하는 기능을 작성해주세요.
+     * 포인트 조회
      */
     @GetMapping("{id}")
     public UserPointResponse point(
@@ -31,7 +31,7 @@ public class PointController {
     }
 
     /**
-     * TODO - 특정 유저의 포인트 충전/이용 내역을 조회하는 기능을 작성해주세요.
+     * TODO: 포인트 내역 조회
      */
     @GetMapping("{id}/histories")
     public List<PointHistory> history(
@@ -41,7 +41,7 @@ public class PointController {
     }
 
     /**
-     * TODO - 특정 유저의 포인트를 충전하는 기능을 작성해주세요.
+     * 포인트 충전
      */
     @PatchMapping("{id}/charge")
     public UserPointResponse charge(
@@ -53,13 +53,14 @@ public class PointController {
     }
 
     /**
-     * TODO - 특정 유저의 포인트를 사용하는 기능을 작성해주세요.
+     * 포인트 사용
      */
     @PatchMapping("{id}/use")
-    public UserPoint use(
+    public UserPointResponse use(
             @PathVariable long id,
             @RequestBody long amount
     ) {
-        return new UserPoint(0, 0, 0);
+        UserPoint userPoint = pointService.useUserPoint(id, amount);
+        return new UserPointResponse(userPoint.id(), userPoint.point(), userPoint.updateMillis());
     }
 }

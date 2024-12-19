@@ -67,6 +67,25 @@ public class PointService {
         }
     }
 
+    // 유저 포인트 사용
+    public UserPoint useUserPoint(long userId, long useAmount) {
+        if(userId<=0) throw new InvalidUserException();
 
+        ReentrantLock lock = getLockForUser(userId);
+        lock.lock();
+        try {
+            UserPoint userPoint = userPointRepository.selectById(userId);
+            if (userPoint.point() < useAmount) {
+                throw new InsufficientBalanceException("Insufficient Balance");
+            }
+            long newBalance = userPoint.point() - useAmount;
+            UserPoint updatedUserPoint = userPointRepository.insertOrUpdate(userId, newBalance);
+
+            pointHistoryRepository.insert(userId, useAmount, TransactionType.USE, System.currentTimeMillis());
+            return updatedUserPoint;
+        } finally {
+            lock.unlock();
+        }
+    }
 
 }

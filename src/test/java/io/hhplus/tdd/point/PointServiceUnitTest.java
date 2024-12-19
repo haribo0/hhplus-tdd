@@ -123,6 +123,41 @@ public class PointServiceUnitTest {
                 .isInstanceOf(PointExceedMaxBalanceException.class);
     }
 
+    @DisplayName("useUserPoint: 포인트 사용시 보유 포인트가 부족할 경우 InsufficientBalanceException 예외를 발생시킨다.")
+    @Test
+    void useUserPoint_InsufficientBalance_ShouldThrowException() {
+        // given
+        long userId = 1L;
+        long useAmount = 500L;
+        UserPoint userPoint = new UserPoint(userId, 0L, System.currentTimeMillis());
+        when(userPointRepository.selectById(userId)).thenReturn(userPoint);
 
+        // when, then
+        assertThatThrownBy(() -> pointService.useUserPoint(userId, useAmount))
+                .isInstanceOf(InsufficientBalanceException.class);
+    }
+
+    @DisplayName("useUserPoint: 포인트 사용 후 보유포인트가 이전 보유포인트에서 사용포인트 차감한 것과 동일하다.")
+    @Test
+    void useUserPoint_Success() {
+        // given
+        long userId = 1L;
+        long initialPoint = 1000L; // 초기 포인트 잔액
+        long useAmount = 500L;    // 사용할 포인트 금액
+        long expectedBalance = 500L; // 차감 후 잔액
+
+        UserPoint initialUserPoint = new UserPoint(userId, initialPoint, System.currentTimeMillis());
+        UserPoint updatedUserPoint = new UserPoint(userId, expectedBalance, System.currentTimeMillis());
+
+        when(userPointRepository.selectById(userId)).thenReturn(initialUserPoint);
+        when(userPointRepository.insertOrUpdate(userId, expectedBalance)).thenReturn(updatedUserPoint);
+
+        // when
+        UserPoint result = pointService.useUserPoint(userId, useAmount);
+
+        // then
+        assertThat(result).isNotNull();
+        assertThat(result.point()).isEqualTo(expectedBalance);
+    }
 
 }
