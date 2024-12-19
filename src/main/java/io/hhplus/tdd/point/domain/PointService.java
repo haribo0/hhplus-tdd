@@ -1,7 +1,5 @@
 package io.hhplus.tdd.point.domain;
 
-import io.hhplus.tdd.database.PointHistoryTable;
-import io.hhplus.tdd.database.UserPointTable;
 import io.hhplus.tdd.point.exception.InsufficientBalanceException;
 import io.hhplus.tdd.point.exception.InvalidUserException;
 import io.hhplus.tdd.point.exception.PointExceedMaxBalanceException;
