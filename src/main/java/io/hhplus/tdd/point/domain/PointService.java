@@ -19,6 +19,13 @@ public class PointService {
     private final UserPointRepository userPointRepository;
     private final PointHistoryRepository pointHistoryRepository;
 
+    private final ConcurrentHashMap<Long, ReentrantLock> userLocks = new ConcurrentHashMap<>();
+
+    // 유저 락 획득
+    private ReentrantLock getLockForUser(Long userId) {
+        return userLocks.computeIfAbsent(userId, id -> new ReentrantLock(true));
+    }
+
     // 포인트 조회
     public UserPoint getUserPoint(long userId) {
         if(userId<=0) throw new InvalidUserException();
@@ -26,6 +33,38 @@ public class PointService {
         UserPoint userPoint = userPointRepository.selectById(userId);
 
         return userPoint;
+    }
+
+    // 유저 포인트 충전
+    public UserPoint chargeUserPoint(long userId, long chargeAmount) {
+        if(userId<=0) throw new InvalidUserException();
+
+        if (chargeAmount < UserPoint.MIN_CHARGE_AMOUNT || chargeAmount > UserPoint.MAX_CHARGE_AMOUNT) {
+            throw new IllegalArgumentException("Invalid charge amount");
+        }
+
+        ReentrantLock lock = getLockForUser(userId);
+        lock.lock();
+        try {
+            UserPoint userPoint = userPointRepository.selectById(userId);
+            if (userPoint.point() == 0) {
+                if (chargeAmount > UserPoint.MAX_POINT_BALANCE) {
+                    throw new PointExceedMaxBalanceException("Max balance exceeded");
+                }
+                userPoint = userPointRepository.insertOrUpdate(userId, chargeAmount);
+            } else {
+                long newBalance = userPoint.point() + chargeAmount;
+                if (newBalance > UserPoint.MAX_POINT_BALANCE) {
+                    throw new PointExceedMaxBalanceException("Max balance exceeded");
+                }
+                userPoint = userPointRepository.insertOrUpdate(userId, newBalance);
+            }
+
+            pointHistoryRepository.insert(userId, chargeAmount, TransactionType.CHARGE, System.currentTimeMillis());
+            return userPoint;
+        } finally {
+            lock.unlock();
+        }
     }
 
 
