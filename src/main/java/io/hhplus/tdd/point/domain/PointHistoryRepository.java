@@ -4,5 +4,5 @@ import java.util.List;
 
 public interface PointHistoryRepository {
     void insert(long userId, long amount, TransactionType transactionType, long timestamp);
-//    List<PointHistory> selectAllByUserId(long userId);
+    List<PointHistory> selectAllByUserId(long userId);
 }

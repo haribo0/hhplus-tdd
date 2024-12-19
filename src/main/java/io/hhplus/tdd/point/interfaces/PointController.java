@@ -31,13 +31,16 @@ public class PointController {
     }
 
     /**
-     * TODO: 포인트 내역 조회
+     * 포인트 내역 조회
      */
     @GetMapping("{id}/histories")
-    public List<PointHistory> history(
+    public List<PointHistoryResponse> history(
             @PathVariable long id
     ) {
-        return List.of();
+        List<PointHistory> pointHistories = pointService.getPointHistory(id);
+        return pointHistories.stream()
+                .map(PointHistoryResponse::fromPointHistory)
+                .collect(Collectors.toList());
     }
 
     /**

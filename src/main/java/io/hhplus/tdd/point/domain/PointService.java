@@ -88,4 +88,13 @@ public class PointService {
         }
     }
 
+    // 포인트 내역 조회
+    public List<PointHistory> getPointHistory(long userId) {
+        List<PointHistory> pointHistoryList = pointHistoryRepository.selectAllByUserId(userId);
+        if (pointHistoryList.isEmpty()) {
+            throw new IllegalStateException("Point History not found");
+        }
+        return pointHistoryList;
+    }
+
 }

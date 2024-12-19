@@ -11,6 +11,9 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.*;
@@ -160,4 +163,38 @@ public class PointServiceUnitTest {
         assertThat(result.point()).isEqualTo(expectedBalance);
     }
 
+    @DisplayName("getPointHistory: 포인트 내역 조회 시 내역이 존재하면 정상적으로 반환한다.")
+    @Test
+    void getPointHistory_Success() {
+        // given
+        long userId = 1L;
+        List<PointHistory> mockHistoryList = new ArrayList<>();
+        mockHistoryList.add(new PointHistory(1L, userId, 1000L, TransactionType.CHARGE, System.currentTimeMillis()));
+        mockHistoryList.add(new PointHistory(2L, userId, 500L, TransactionType.USE, System.currentTimeMillis()));
+
+        when(pointHistoryRepository.selectAllByUserId(userId)).thenReturn(mockHistoryList);
+
+        // when
+        List<PointHistory> result = pointService.getPointHistory(userId);
+
+        // then
+        assertThat(result).isNotNull();
+        assertThat(result).hasSize(2);
+        assertThat(result.get(0).amount()).isEqualTo(1000L);
+        assertThat(result.get(1).amount()).isEqualTo(500L);
+        verify(pointHistoryRepository, times(1)).selectAllByUserId(userId);
+    }
+
+    @DisplayName("getPointHistory: 포인트 내역 조회 시 내역이 없으면 IllegalStateException 예외를 발생시킨다.")
+    @Test
+    void getPointHistory_NoHistory_ShouldThrowException() {
+        // given
+        long userId = 1L;
+        when(pointHistoryRepository.selectAllByUserId(userId)).thenReturn(new ArrayList<>());
+
+        // when, then
+        assertThatThrownBy(() -> pointService.getPointHistory(userId))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessage("Point History not found");
+    }
 }
