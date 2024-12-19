@@ -1,5 +1,8 @@
-package io.hhplus.tdd.point;
+package io.hhplus.tdd.point.domain;
 
+import lombok.Builder;
+
+@Builder
 public record PointHistory(
         long id,
         long userId,
@@ -7,4 +10,6 @@ public record PointHistory(
         TransactionType type,
         long updateMillis
 ) {
+
+
 }
